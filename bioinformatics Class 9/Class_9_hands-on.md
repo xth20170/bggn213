@@ -9,9 +9,7 @@ output:
 
 
 
-changes
- 
- 
+
  
 Let us read our data
 
@@ -341,9 +339,9 @@ table(wisc.km$cluster, diagnosis)
 ##    diagnosis
 ##       0   1
 ##   1   0  71
-##   2 232   5
-##   3   0  13
-##   4   3  66
+##   2   3  66
+##   3 232   5
+##   4   0  13
 ##   5 122  57
 ```
 
@@ -356,9 +354,9 @@ table(wisc.km$cluster, wisc.hclust.clusters)
 ##    wisc.hclust.clusters
 ##       1   2   3   4   5
 ##   1  67   2   2   0   0
-##   2   6   1 228   2   0
-##   3  11   0   0   0   2
-##   4  45   0  24   0   0
+##   2  45   0  24   0   0
+##   3   6   1 228   2   0
+##   4  11   0   0   0   2
 ##   5  48   2 129   0   0
 ```
 
@@ -406,9 +404,9 @@ table(wisc.km$cluster, wisc.pr.hclust.clusters)
 ##    wisc.pr.hclust.clusters
 ##       1   2   3   4
 ##   1  32  34   5   0
-##   2   0   0  21 216
-##   3  11   2   0   0
-##   4   2  38  24   5
+##   2   2  38  24   5
+##   3   0   0  21 216
+##   4  11   2   0   0
 ##   5   0   5  42 132
 ```
 
