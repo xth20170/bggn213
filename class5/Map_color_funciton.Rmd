@@ -1,0 +1,106 @@
+---
+title: "Map_class6_function"
+author: "Tianhan Xu"
+date: "4/20/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# this is one
+## this is two
+### let us look at the old poor function 
+
+```{r}
+#old function
+map.colors <- function (value,high.low,palette) {
+  proportion <- ((value-high.low[1])/(high.low[2]-high.low[1]))
+  index <- round ((length(palette)-1)*proportion)+1
+  return (palette[index])
+}
+```
+
+
+### now let's try to understand the function..
+```{r}
+map.colors2<- function (x,
+                        high.low = range(x),
+                        palette = cm.colors(100) ){
+  
+# Determine precent values of the 'high.low' range
+    percent <- ((x-high.low[1])/(high.low[2]-high.low[1]))
+# Find corresponding index position in the color ‘palette'
+# note catch for 0 precent values to 1   
+  index <- round ((length(palette)-1)*percent)+1
+  
+  return (palette[index])
+}
+```
+
+##work on my function
+```{r}
+add <- function(x, y=1) {
+ # Sum the input x and y
+ x + y
+}
+```
+
+```{r}
+#try to see wether this work
+add(c(1:5), 6)
+```
+
+```{r}
+#this is my second function
+rescale <- function(x) {
+ rng <-range(x)
+ (x - rng[1]) / (rng[2] - rng[1])
+}
+```
+
+```{r}
+#test the second function
+rescale(1:10)
+
+#test again
+rescale(c(1,10, 5, NA))
+```
+
+```{r}
+# this rescale the funtion
+rescale2 <- function(x, na.rm=TRUE) {
+ rng <-range(x,na.rm=TRUE)
+ (x - rng[1]) / (rng[2] - rng[1])
+}
+
+rescale2(c(1,10, 5, NA))
+```
+
+```{r}
+#this is the fine function
+rescale3 <- function(x, na.rm=TRUE, plot=FALSE) {
+ if(na.rm) {
+ rng <-range(x, na.rm=na.rm)
+ } else {
+ rng <-range(x)
+ }
+ print("Hello")
+ answer <- (x - rng[1]) / (rng[2] - rng[1])
+ print("is it me you are looking for?")
+ if(plot) {
+ plot(answer, typ="b", lwd=4)
+ }
+ print("I can see it in ...")
+  return(answer)
+}
+```
+
+```{r}
+#let's try the fine reaction
+rescale3(c(1,10, 5, NA), plot=TRUE)
+```
+
+
+
+
