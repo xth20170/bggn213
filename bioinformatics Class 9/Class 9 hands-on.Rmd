@@ -9,6 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+some changes 
+ 
+ 
+ 
 Let us read our data
 ```{r}
 url <- "https://bioboot.github.io/bggn213_S18/class-material/WisconsinCancer.csv"
