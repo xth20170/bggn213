@@ -1,3 +1,3 @@
 # bggn213
 
-Some change
+My BIoinformatics class work from BGGN213 at UCSD
