@@ -25,7 +25,197 @@ percent
 ```
 
 
-Q1: What proportion of PDB entries does X-ray crystallography account for? What proportion of
-structures are protein?
+Q1: determine the percentage of structures solved by X-Ray and Electron Microscopy. From the website what proportion of structures are protein?
+
 Q2: Type HIV in the search box on the home page and determine how many HIV-1 protease
 structures are in the current PDB?
+
+```{r}
+library(bio3d)
+```
+
+Readf in our HIV-Pr structure
+```{r}
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+```{r}
+attributes(pdb)
+```
+
+```{r}
+head(pdb$atom)
+str(pdb$atom)
+```
+
+```{r}
+pdb$atom[1:2, c("eleno", "elety", "x","y","z")]
+```
+```{r}
+# Note that individual $atom records can also be accessed like this  
+pdb$atom$elety[1:2]
+```
+```{r}
+# Which allows us to do the following  
+plot.bio3d(pdb$atom$b[pdb$calpha], sse=pdb, typ="l", ylab='B-factor')
+```
+
+
+
+
+```{r}
+# Print a summary of the coordinate data in $xyz  
+pdb$xyz
+```
+
+```{r}
+# Examine the row and column dimensions  
+dim(pdb$xyz)
+```
+
+```{r}
+pdb$xyz[1, 1:2]
+```
+
+Q8. Use the Bio3D   function to write out a protein only PDB file for viewing in VMD. Also write out a second separate PDB file for the ligand with residue name MK1
+HINT: In Bio3D you can use the trim.pdb() function together with the pub object and your atom selections such as atom.select(pdb, ’protein’) for the fist file and atom.select(pdb, ‘ligand’) for the second.
+
+
+
+```{r}
+# Select all C-alpha atoms (return their indices)  
+inds.ligand <- atom.select(pdb, "ligand") 
+inds.protein <-  atom.select(pdb, 'protein')
+inds.protein
+```
+
+```{r}
+pdb$atom[inds.ligand$atom, ]
+```
+
+```{r}
+pdb$atom[inds.protein$atom, ]
+```
+
+chech we have what we want
+```{r}
+pdb.ligand <- trim.pdb(pdb, inds= inds.ligand)
+pdb.ligand
+```
+
+
+```{r}
+write.pdb(pdb.ligand, file= '1hsg_ligand.pdb')
+```
+
+```{r}
+pdb.protein <- trim.pdb(pdb, inds = inds.protein)
+write.pdb(pdb.protein, file = '1hsg_protein.pdb')
+```
+
+```{r}
+# Download some example PDB files 
+ids <- c("1TND_B","1AGR_A","1TAG_A","1GG2_A","1KJY_A","4G5Q_A")  
+files <- get.pdb(ids, split = TRUE)
+```
+
+```{r}
+# Extract and align the chains we are interested in  
+pdbs <- pdbaln(files, fit = TRUE)
+pdbs
+
+```
+
+
+Q8: What effect does setting the fit=TRUE option have in the related rmsd() function? What does RMSD measure and what would the results indicate if you set fit=FALSE or removed this option? HINT: Bio3D functions have various default options that will be used if the option is not explicitly specified by the user, see help(rmsd) for an example and note that the input options with an equals sign (e.g. fit=FALSE) have default values.
+
+```{r}
+# Access the first 5 rows, and 8 columns  
+pdbs$ali[1:5, 1:8]
+```
+
+```{r}
+# Associated residues numbers  
+pdbs$resno[1:5, 1:8]
+```
+
+```{r}
+# Calculate sequence identity 
+seqidentity(pdbs)
+```
+
+
+```{r}
+# Calculate RMSD  
+rd <- rmsd(pdbs)   
+# Clustering  
+hc <- hclust(as.dist(rd)) 
+grps <- cutree(hc, k=3) 
+ 
+# Plot results as dendrogram  
+hclustplot(hc, k=3)
+```
+
+
+
+Section 5: Example Application on Adenylate Kinase (Adk)
+```{r}
+aa <- get.seq("1ake_A")
+```
+
+```{r}
+# Blast or hmmer search
+b <- blast.pdb(aa)
+```
+
+```{r}
+# Plot a summary of search results
+hits <- plot(b, typ='b')
+```
+```{r}
+hits
+```
+
+
+```{r}
+head(hits$pdb.id)
+```
+
+```{r}
+# Fetch PDBs
+files <- get.pdb(hits$pdb.id, path = "pdbs", split = TRUE, gzip = TRUE)
+# Align structures
+pdbs <- pdbaln(files)
+# Vector containing PDB codes
+ids <- basename.pdb(pdbs$id)
+# Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+Figure 12: Schematic representation of alignment. Grey regions depict aligned residues, while white depict gap regions. The red bar at the top depict sequence conservation.
+
+section 5.4 Principal component analysis
+```{r}
+# find invariant core
+core <- core.find(pdbs)  
+# superimpose all structures to core
+pdbs$xyz = pdbfit(pdbs, core) 
+# Perform PCA
+pc.xray <- pca(pdbs)
+```
+
+```{r}
+# Calculate RMSD
+rd <- rmsd(pdbs)  
+# Structure-based clustering
+hc.rd <- hclust(dist(rd)) 
+grps.rd <- cutree(hc.rd, k=3)
+plot(pc.xray, 1:2, col="grey50", bg=grps.rd, pch=21, cex=1)
+```
+
+```{r}
+pc1 <-  mktrj(pc.xray, pc=1, file="pc_1.pdb")
+```
+
+
+
