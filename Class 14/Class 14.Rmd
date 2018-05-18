@@ -1,0 +1,275 @@
+---
+title: "class 14"
+author: "Tianhan Xu"
+date: "5/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+metadata <- read.csv("data/airway_metadata.csv",stringsAsFactors = FALSE)
+counts<-  read.csv("data/airway_scaledcounts.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+colnames(counts)[-1] == metadata[,1]
+```
+
+Calculate the mean counts for each gene accross all durg treatments.
+
+```{r}
+#metadata[, "dex"] == "control"
+control <- metadata[metadata[, "dex"] == "control",]
+treat <- metadata[metadata[, "dex"] == "treated", ]
+```
+
+```{r}
+control.mean <- rowSums(counts[, control$id])/length(control$id)
+treat.mean <- rowSums(counts[, treat$id])/length(treat$id)
+names(control.mean) <- counts$ensgene
+names(treat.mean) <- counts$ensgene
+head(treat.mean)
+```
+
+```{r}
+meancounts <- data.frame(control.mean, treat.mean)
+head(meancounts)
+```
+
+```{r}
+colSums(meancounts)
+```
+
+```{r}
+plot(control.mean, treat.mean, xlab="control", ylab="treated")
+```
+
+```{r}
+plot(control.mean, treat.mean, xlab="control", ylab="treated", log='xy')
+```
+
+```{r}
+# how to add another column
+meancounts$log2fc <- log2(meancounts[,"treat.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+
+
+```{r}
+x <- matrix(1:10, ncol=2, byrow=TRUE)
+x[5,2] <- 0
+which(x==0, arr.ind = TRUE)
+```
+```{r}
+unique(x[,2])
+```
+
+
+
+Find the gene that has zero expression
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+paste("Up:", sum(up.ind))
+paste("Down:", sum(down.ind))
+```
+
+```{r}
+anno <- read.csv("data/annotables_grch38.csv")
+head(anno)
+```
+
+```{r}
+results <- merge(mycounts, anno, by.x="row.names", by.y="ensgene")
+head(results)
+```
+
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+columns(org.Hs.eg.db)
+```
+
+
+```{r}
+mycounts$symbol <- mapIds(org.Hs.eg.db,
+                          keys=row.names(mycounts),
+                          column="SYMBOL",
+                          keytype="ENSEMBL",
+                          multiVals="first")
+head(mycounts)
+```
+
+
+```{r}
+head(mycounts[up.ind,])
+
+```
+#DEseq2 Analysis
+```{r}
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+res
+```
+
+
+```{r}
+summary(res)
+```
+
+
+
+```{r}
+a <- c(3,9,1,50)
+sort(a)
+order(a) #return the index of the postion
+```
+
+We can order our results table by the smallest p value:
+```{r}
+resOrdered <- res[order(res$pvalue),]
+head(resOrdered)
+```
+
+```{r}
+resSig01 <- subset(as.data.frame(res), padj < 0.01)
+nrow(resSig01)
+```
+
+```{r}
+ord <- order( resSig01$padj )
+#View(res01[ord,])
+head(resSig01[ord,])
+```
+
+
+
+
+```{r}
+resSig01$symbol <- mapIds(org.Hs.eg.db,
+                          keys=row.names(resSig01),
+                          column="SYMBOL",
+                          keytype="ENSEMBL",
+                          multiVals="first")
+
+resSig01$Uniprot <- mapIds(org.Hs.eg.db,
+                          keys=row.names(resSig01),
+                          column="UNIPROT",
+                          keytype="ENSEMBL",
+                          multiVals="first")
+head(resSig01)
+```
+
+```{r}
+write.csv(resSig01[ord,], "signif01_results.csv")
+```
+
+
+# Data Visualization
+```{r}
+resSig01$symbol
+```
+
+
+```{r}
+i <- grep("CRISPLD2", resSig01$symbol)
+resSig01[i,]
+```
+
+
+```{r}
+rownames(resSig01[i,])
+```
+
+
+```{r}
+plotCounts(dds, gene="ENSG00000103196", intgroup="dex")
+```
+
+```{r}
+d <- plotCounts(dds, gene="ENSG00000103196", intgroup="dex", returnData=TRUE)
+head(d)
+```
+
+```{r}
+boxplot(count ~ dex , data=d)
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(d, aes(dex, count)) + geom_boxplot(aes(fill=dex)) + scale_y_log10() + ggtitle("CRISPLD2")
+```
+
+
+```{r}
+#MA & Volcano plots
+res$sig <- res$padj<0.05
+table(res$sig)
+```
+
+```{r}
+sum(is.na(res$sig))
+```
+
+```{r}
+# MA plot
+plotMA(res, ylim=c(-2,2))
+```
+
+Shrunken log2 fold changes, which remove the noise associated with log2 fold changes from low count genes.
+```{r}
+resLFC <- lfcShrink(dds, coef=2)
+resLFC
+```
+
+```{r}
+plotMA(resLFC, ylim=c(-2, 2))
+```
+
+```{r}
+# Volcano plot
+ggplot(as.data.frame(res), aes(log2FoldChange, -1*log10(pvalue), col=sig)) + 
+    geom_point() + 
+    ggtitle("Volcano plot")
+```
+
+```{r}
+vsdata <- vst(dds, blind=FALSE)
+```
+
+```{r}
+# PCA
+plotPCA(vsdata, intgroup="dex")
+```
+
+```{r}
+sessionInfo()
+```
+
