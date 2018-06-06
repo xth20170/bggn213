@@ -1,7 +1,6 @@
 ---
 title: "Bioinformatics Class 15"
 author: "Tianhan Xu"
-date: "5/23/2018"
 output: html_document
 ---
 
