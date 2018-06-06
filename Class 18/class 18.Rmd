@@ -1,7 +1,6 @@
 ---
 title: "class 18"
 author: "Tianhan Xu"
-date: "6/1/2018"
 output: html_document
 ---
 
