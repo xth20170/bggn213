@@ -9,6 +9,6 @@ The class homepage is [here](https://bioboot.github.io/bggn213_S18/)
 
 -mapping the ENERGY LANDSCAPE of biomolecules [class 11](https://github.com/xth20170/bggn213/tree/master/Class%2011)
 
--durg design [class 12](https://github.com/xth20170/bggn213/tree/master/Class%2012)
+-durg design *[class 12]*(https://github.com/xth20170/bggn213/tree/master/Class%2012)
 
 -Genome information[class 13](https://github.com/xth20170/bggn213/blob/master/Class%2013/Class_13.md)
